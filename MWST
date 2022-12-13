@@ -1,0 +1,126 @@
+#!/usr/local/bin/python3
+# adapted from https://www.programiz.com/dsa/kruskal-algorithm
+import sys
+
+
+# Class for an undirected Graph object
+# includes just the base functions to create a Graph object
+# and to properly apply Kruskal's algorithm
+# including find() and union
+class Graph:
+    def __init__(self, vertices):
+        self.V = vertices
+        self.graph = []
+
+    def add_edge(self, u, v, w):
+        self.graph.append([u, v, w])
+
+    # use find() to check if a cycle is formed
+    # if same parents -> contained in a cycle
+    def find(self, parent, i):
+        # base case: if a node is a parent of itself
+        if parent[i] == i:
+            return i
+        # else, recursively search for the parent
+        return self.find(parent, parent[i])
+
+    # add edges together
+    # union by rank: adds the shorter edge to the root of the taller tree
+    def union(self, parent, rank, x, y):
+        x_root = self.find(parent, x)
+        y_root = self.find(parent, y)
+
+        # merges x and y
+        # assumes x and y are not in the same set
+        if rank[x_root] < rank[y_root]:
+            parent[x_root] = y_root
+        elif rank[x_root] > rank[y_root]:
+            parent[y_root] = x_root
+        else:
+            parent[y_root] = x_root
+            rank[x_root] += 1
+
+    #  Applying Kruskal algorithm
+    def kruskal(self):
+        result = []
+
+        # sort the graph edges by increasing order of weight
+        self.graph = sorted(self.graph, key=lambda item: item[2])
+        parent = []
+        rank = []
+
+        # initialize parent nodes, and ranks to 0
+        for node in range(self.V):
+            parent.append(node)
+            rank.append(0)
+
+        # main work: iterate through the graph, adding minimum weight edge
+        # that doesn't create a cycle when added
+        # iterate until all vertices are reached (V - 1, since |E| = |V| - 1)
+        # i iterates through all the nodes (if necessary)
+        # e keeps track of how many vertices we've since added to result
+        i, e = 1, 1
+        while e < self.V - 1:
+            u, v, w = self.graph[i]
+            i = i + 1
+
+            # if parent of u and v are the same, they form a cycle
+            # if x != y, they are not in a cycle (disjoint) -> add them together
+            # else, they ARE in a cycle, don't do anything -> move on
+            x = self.find(parent, u)
+            y = self.find(parent, v)
+            if x != y:
+                e = e + 1
+                result.append([u, v, w])
+                self.union(parent, rank, x, y)
+        return result
+
+
+if __name__ == "__main__":
+    # read input file and output file
+    # form a Graph from the input file
+    # run kruskal's on the resulting Graph
+    # output results into output file as specified
+    if len(sys.argv) != 3:
+        print("Usage: MWST input_file output_file; only " + str(len(sys.argv)) + " arguments were given.")
+        sys.exit(1)
+
+    with open(str(sys.argv[1]), 'r') as input_file:
+        lines = input_file.readlines()
+
+    length = len(lines)
+    firstLine = lines[0].split()
+    secondLine = lines[1].split()
+    V = int(firstLine[0])
+    E = int(secondLine[0])
+
+    # initialize graph with V vertices
+    my_graph = Graph(V + 1)                     # include 0th index, ignore
+
+    # populate graph:
+    # input_file format is u v w
+    # u and v are vertices, and w is the weight of their edge
+    my_graph.add_edge(-1, -1, -1)               # 0th index edge, ignore
+    for i in range(2, len(lines)):
+        line = lines[i].split()
+        u, v, w = line
+        my_graph.add_edge(int(u), int(v), float(w))
+
+    result = my_graph.kruskal()
+
+    # output result
+    with open(str(sys.argv[2]), 'w') as output_file:
+        sum_weight = 0
+        for edge in range(len(result)):
+            u = result[edge][0]
+            v = result[edge][1]
+            w = result[edge][2]
+            sum_weight += w
+
+            # formatting and outputting each edge
+            label = lines.index(f'{u} {v} {int(w)}\n') - 1
+            output = '{:>4}: ({}, {}) {}\n'.format(label, u, v, w)
+            output_file.write(output)
+
+        total_weight = 'Total Weight = {0:.2f}\n'.format(sum_weight)
+        output_file.write(total_weight)
