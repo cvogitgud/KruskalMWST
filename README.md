@@ -10,4 +10,5 @@ This compiles MWST, meant to be used with `python3`.
 This folder contains several test sets as input and output pairs. Since the solution for an MWST is not unique and depends on the order of the input data set, several possible outputs are valid.
 
 ## Check
-`Check` is an executable to verify the validity of an input-output pair. Make `Check` an executable with `chmod 700 Check`.
+`Check` is an executable to verify the validity of an input-output pair. Make `Check` an executable with  
+`chmod 700 Check`.
